@@ -1,0 +1,6 @@
+services:
+  payment:
+    build: ./
+    image: payment-service
+    ports:
+      - '8080:8080'
