@@ -95,11 +95,15 @@ func (s *service) sendTransactionUpdate(ctx context.Context, tx Transaction) {
 				return
 			}
 
+			slog.Info("emulator: sending request", slog.Any("payload", string(b)))
+
 			req, err := http.NewRequest(http.MethodPost, tx.CallbackURL, bytes.NewBuffer(b))
 			if err != nil {
 				slog.Error("emulator: failed to create HTTP request", slog.Any("error", err))
 				return
 			}
+
+			req.Header.Add(paymenthttp.HeaderContentType, contentType)
 
 			resp, err := s.client.Do(req)
 			if err != nil {

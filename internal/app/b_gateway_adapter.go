@@ -2,7 +2,7 @@ package app
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"net/http"
 
@@ -10,30 +10,30 @@ import (
 	"go-payment-service/pkg/model"
 )
 
-type GatewayA struct {
+type GatewayB struct {
 	client   paymenthttp.HTTPClient
 	endpoint string
 }
 
-func newGatewayA(client paymenthttp.HTTPClient, endpoint string) *GatewayA {
-	return &GatewayA{
+func newGatewayBAdapter(client paymenthttp.HTTPClient, endpoint string) *GatewayB {
+	return &GatewayB{
 		client:   client,
 		endpoint: endpoint,
 	}
 }
 
-func (g *GatewayA) ProcessTransaction(tx model.Transaction) (model.GatewayResponse, error) {
-	jsonData, err := json.Marshal(g.buildGatewayRequest(tx))
+func (g *GatewayB) ProcessTransaction(tx model.Transaction) (model.GatewayResponse, error) {
+	xmlData, err := xml.Marshal(g.buildGatewayRequest(tx))
 	if err != nil {
 		return model.GatewayResponse{}, fmt.Errorf("failed to marshal gateway request: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, g.endpoint+"/process", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest(http.MethodPost, g.endpoint+"/process", bytes.NewBuffer(xmlData))
 	if err != nil {
 		return model.GatewayResponse{}, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
-	req.Header.Set(paymenthttp.HeaderContentType, paymenthttp.MIMETypeJSON)
+	req.Header.Set(paymenthttp.HeaderContentType, paymenthttp.MIMETypeXML)
 
 	resp, err := g.client.Do(req)
 	if err != nil {
@@ -41,15 +41,19 @@ func (g *GatewayA) ProcessTransaction(tx model.Transaction) (model.GatewayRespon
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return model.GatewayResponse{}, fmt.Errorf("gateway returned non-200 status code: %d", resp.StatusCode)
+	}
+
 	var gr model.GatewayResponse
-	if err := json.NewDecoder(resp.Body).Decode(&gr); err != nil {
+	if err := xml.NewDecoder(resp.Body).Decode(&gr); err != nil {
 		return model.GatewayResponse{}, fmt.Errorf("failed to decode gateway response: %w", err)
 	}
 
 	return gr, nil
 }
 
-func (g *GatewayA) buildGatewayRequest(tx model.Transaction) model.GatewayRequest {
+func (g *GatewayB) buildGatewayRequest(tx model.Transaction) model.GatewayRequest {
 	return model.GatewayRequest{
 		OrderID:     tx.ID,
 		Amount:      tx.Amount,

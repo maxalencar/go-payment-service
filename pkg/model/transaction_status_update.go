@@ -8,5 +8,5 @@ type TransactionStatusUpdate struct {
 	TransactionID string            `json:"transactionId"`
 	Status        TransactionStatus `json:"status"`
 	ReceivedAt    time.Time         `json:"receivedAt"`
-	Details       map[string]string `json:"details"`
+	Details       string            `json:"details"`
 }

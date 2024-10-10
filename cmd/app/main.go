@@ -26,6 +26,8 @@ func main() {
 
 	srv := app.NewServer()
 
+	slog.Info("starting app", slog.Any("mode", logLevel))
+
 	// Start server
 	if err := srv.Start(port); err != nil {
 		logger.Error("error starting server", slog.Any("error", err))
