@@ -37,8 +37,8 @@ func NewServer() Server {
 	gatewayEmulator := emulator.Start()
 
 	gateways := map[string]PaymentGateway{
-		"gatewayA": newGatewayA(resilientHTTPClient, gatewayEmulator.URL),
-		"gatewayB": newGatewayB(resilientHTTPClient, gatewayEmulator.URL),
+		"gatewayA": newGatewayAAdapter(resilientHTTPClient, gatewayEmulator.URL),
+		"gatewayB": newGatewayBAdapter(resilientHTTPClient, gatewayEmulator.URL),
 	}
 
 	memoryRepository := newMemoryTransactionRepository()
